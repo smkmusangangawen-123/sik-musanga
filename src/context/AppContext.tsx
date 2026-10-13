@@ -88,6 +88,8 @@ interface AppContextType {
   checkAndTriggerOverdueAlerts: (manualNotify?: boolean) => { overdueCount: number; overdueTotal: number };
   blastOverdueWarnings: () => { notifiedCount: number; totalOverdue: number };
   lastOverdueCheck: string;
+  exportDatabaseBackup: () => void;
+  importDatabaseBackup: (jsonString: string) => { success: boolean; message: string };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -1038,6 +1040,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     checkAndTriggerOverdueAlerts(false);
   }, []);
 
+  const exportDatabaseBackup = () => {
+    const backupData = {
+      version: '2.4',
+      systemMode: 'STANDALONE_OFFLINE_ZERO_API_KEY',
+      appName: 'EduPay SMK Muhammadiyah 1 Ngawen',
+      backupDate: new Date().toISOString(),
+      schoolInfo,
+      students,
+      bills,
+      transactions,
+      notifications,
+      users,
+      studentAccounts
+    };
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `Backup_EduPay_${schoolInfo.shortName.replace(/[^a-zA-Z0-9]/g, '_')}_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    triggerPushNotification(
+      'Cadangan Berhasil Diunduh',
+      'File cadangan basis data (.json) mandiri berhasil disimpan ke komputer tanpa memerlukan API key.',
+      'success'
+    );
+  };
+
+  const importDatabaseBackup = (jsonString: string): { success: boolean; message: string } => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (!data.students || !Array.isArray(data.students)) {
+        return { success: false, message: 'Format file tidak valid atau data siswa tidak ditemukan.' };
+      }
+      if (data.students) setStudents(data.students);
+      if (data.bills) setBills(data.bills);
+      if (data.transactions) setTransactions(data.transactions);
+      if (data.notifications) setNotifications(data.notifications);
+      if (data.users) setUsers(data.users);
+      if (data.studentAccounts) setStudentAccounts(data.studentAccounts);
+      if (data.schoolInfo) setSchoolInfo(data.schoolInfo);
+
+      triggerPushNotification(
+        'Pemulihan Berhasil',
+        'Data sistem berhasil dipulihkan secara penuh dari file cadangan.',
+        'success'
+      );
+      return { success: true, message: 'Data berhasil dipulihkan secara penuh!' };
+    } catch (err: any) {
+      return { success: false, message: `Gagal membaca file: ${err.message}` };
+    }
+  };
+
   const resetAllData = () => {
     localStorage.removeItem('edupay_students');
     localStorage.removeItem('edupay_bills');
@@ -1110,7 +1169,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteStudent,
       checkAndTriggerOverdueAlerts,
       blastOverdueWarnings,
-      lastOverdueCheck
+      lastOverdueCheck,
+      exportDatabaseBackup,
+      importDatabaseBackup
     }}>
       {children}
     </AppContext.Provider>

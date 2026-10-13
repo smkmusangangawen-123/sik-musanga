@@ -13,7 +13,16 @@ import {
   Globe, 
   Check, 
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Database,
+  Download,
+  FileJson,
+  CheckCircle2,
+  AlertTriangle,
+  HardDrive,
+  ShieldCheck,
+  Zap,
+  Info
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { SchoolInfo } from '../types';
@@ -50,7 +59,7 @@ const PRESET_LOGOS = [
     svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="48" fill="#1d4ed8" stroke="#fbbf24" stroke-width="4"/>
       <path d="M50 16 L60 38 L84 38 L65 52 L72 75 L50 61 L28 75 L35 52 L16 38 L40 38 Z" fill="#fbbf24"/>
-      <circle cx="50" cy="50" r="16" fill="#ffffff"/>
+      <circle cx="50" cy="16" r="16" fill="#ffffff"/>
       <path d="M42 55 C42 45, 58 45, 58 55 Z" fill="#1d4ed8"/>
       <circle cx="50" cy="44" r="4" fill="#1d4ed8"/>
     </svg>`
@@ -71,10 +80,21 @@ const PRESET_LOGOS = [
 ];
 
 export const SchoolSettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
-  const { schoolInfo, updateSchoolInfo } = useApp();
+  const { 
+    schoolInfo, 
+    updateSchoolInfo,
+    students,
+    bills,
+    transactions,
+    users,
+    studentAccounts,
+    exportDatabaseBackup,
+    importDatabaseBackup
+  } = useApp();
   const [formData, setFormData] = useState<SchoolInfo>({ ...schoolInfo });
-  const [activeTab, setActiveTab] = useState<'profile' | 'logo' | 'rekening'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'logo' | 'rekening' | 'system'>('profile');
   const [selectedPresetId, setSelectedPresetId] = useState<string>('muhammadiyah');
+  const [restoreStatus, setRestoreStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   if (!isOpen) return null;
 
@@ -188,6 +208,22 @@ export const SchoolSettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
           >
             <UserCheck className="w-4 h-4" />
             <span>Pejabat &amp; Rekening Bank</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('system')}
+            className={`py-2.5 px-3.5 border-b-2 transition-all flex items-center gap-1.5 ${
+              activeTab === 'system'
+                ? 'border-emerald-600 text-emerald-800 font-bold bg-white rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Database className="w-4 h-4 text-emerald-600" />
+            <span>Mode Mandiri (Bebas API Key)</span>
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-extrabold uppercase">
+              100% Offline
+            </span>
           </button>
         </div>
 
@@ -518,6 +554,181 @@ export const SchoolSettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
               </div>
             )}
 
+            {/* Tab 4: Standalone / Zero API Key & Database Backup */}
+            {activeTab === 'system' && (
+              <div className="space-y-4">
+                {/* System Mode Banner */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-slate-900">
+                          Sistem EduPay Mode Mandiri (Bebas API Key)
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          Aktif • 100% Standalone
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Aplikasi ini beroperasi <strong>tanpa memerlukan API Key apa pun</strong>, tanpa biaya kuota token, dan tanpa ketergantungan server cloud eksternal. Semua data operasional tersimpan secara aman dan persisten di browser komputer sekolah.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Feature Checklist */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-3 border-t border-emerald-200/70 text-xs text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span><strong>0 Biaya Langganan:</strong> Bebas kuota &amp; biaya bulanan</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span><strong>Penyimpanan Mandiri:</strong> LocalStorage + Cadangan JSON</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span><strong>Simulasi QRIS &amp; VA:</strong> Generator lokal langsung</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span><strong>WhatsApp Direct:</strong> Integrasi resmi wa.me (Tanpa Bot API)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Database Statistics */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase text-slate-600 flex items-center gap-1.5">
+                      <HardDrive className="w-3.5 h-3.5 text-slate-500" />
+                      Ringkasan Data Tersimpan Saat Ini
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400">Penyimpanan Browser Lokal</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <div className="text-base font-extrabold text-slate-800">{students.length}</div>
+                      <div className="text-[10px] text-slate-500 font-semibold">Data Siswa</div>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <div className="text-base font-extrabold text-slate-800">{bills.length}</div>
+                      <div className="text-[10px] text-slate-500 font-semibold">Tagihan SPP</div>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <div className="text-base font-extrabold text-emerald-700">{transactions.length}</div>
+                      <div className="text-[10px] text-slate-500 font-semibold">Transaksi</div>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <div className="text-base font-extrabold text-indigo-700">{users.length}</div>
+                      <div className="text-[10px] text-slate-500 font-semibold">Akun Staf</div>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-slate-200">
+                      <div className="text-base font-extrabold text-emerald-700">{studentAccounts.length}</div>
+                      <div className="text-[10px] text-slate-500 font-semibold">Akun Siswa</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Backup & Restore Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Backup Card */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 transition-all flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                          <Download className="w-4 h-4" />
+                        </div>
+                        <h5 className="text-xs font-bold text-slate-900">Cadangkan Basis Data (.JSON)</h5>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        Unduh salinan lengkap seluruh siswa, tagihan, transaksi, akun pengguna, dan pengaturan dalam satu file cadangan aman.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={exportDatabaseBackup}
+                      className="mt-3 w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Unduh File Cadangan JSON</span>
+                    </button>
+                  </div>
+
+                  {/* Restore Card */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 transition-all flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                          <Upload className="w-4 h-4" />
+                        </div>
+                        <h5 className="text-xs font-bold text-slate-900">Pulihkan Basis Data (.JSON)</h5>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        Gunakan file cadangan sebelumnya untuk memulihkan seluruh data saat berpindah laptop atau mengganti perangkat kerja bendahara.
+                      </p>
+                    </div>
+                    
+                    <label className="mt-3 w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer">
+                      <FileJson className="w-3.5 h-3.5" />
+                      <span>Pilih File Cadangan JSON</span>
+                      <input
+                        type="file"
+                        accept=".json,application/json"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const content = event.target?.result as string;
+                            if (content) {
+                              const res = importDatabaseBackup(content);
+                              if (res.success) {
+                                setRestoreStatus({ type: 'success', text: res.message });
+                              } else {
+                                setRestoreStatus({ type: 'error', text: res.message });
+                              }
+                            }
+                          };
+                          reader.readAsText(file);
+                          e.target.value = '';
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {restoreStatus && (
+                  <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                    restoreStatus.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  }`}>
+                    {restoreStatus.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    )}
+                    <span>{restoreStatus.text}</span>
+                  </div>
+                )}
+
+                {/* Practical Advice */}
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
+                  <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Tips Pemakaian Tanpa API Key:</strong>
+                    <ul className="list-disc pl-4 mt-1 space-y-0.5 text-amber-800">
+                      <li>Secara berkala unduh <em>File Cadangan JSON</em> (misal tiap akhir bulan) untuk disimpan di flashdisk atau Google Drive bendahara.</li>
+                      <li>Kwitansi dan kartu login siswa dapat langsung dicetak atau disimpan sebagai file PDF tanpa kuota internet.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}

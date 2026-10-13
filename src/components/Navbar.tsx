@@ -59,12 +59,16 @@ export const Navbar: React.FC<Props> = ({
               )}
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-none">
                   EduPay <span className="text-emerald-600">{schoolInfo.shortName}</span>
                 </span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase tracking-wider">
-                  V.2.4 Real-Time
+                  V.2.4
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Mode Mandiri (Tanpa API Key)
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium truncate max-w-[200px] sm:max-w-xs">

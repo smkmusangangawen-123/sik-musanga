@@ -21,7 +21,9 @@ import {
   Send,
   RefreshCw,
   Download,
-  UserCog
+  UserCog,
+  Database,
+  ShieldCheck
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatRupiah, formatDateIndo, getDaysOverdue, createOverdueWhatsAppUrl } from '../utils/formatters';
@@ -52,7 +54,8 @@ export const AdminDashboard: React.FC<Props> = ({
     setActivePaymentBill,
     checkAndTriggerOverdueAlerts,
     blastOverdueWarnings,
-    lastOverdueCheck
+    lastOverdueCheck,
+    exportDatabaseBackup
   } = useApp();
 
   const [period, setPeriod] = useState<'today' | 'month' | 'semester' | 'all'>('month');
@@ -139,9 +142,15 @@ export const AdminDashboard: React.FC<Props> = ({
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Sistem Monitoring Keuangan Real-Time</span>
+            <div className="flex items-center gap-2 flex-wrap mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Sistem Monitoring Keuangan Real-Time</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-700/40 border border-emerald-400/30 text-emerald-200 text-xs font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Mode Mandiri (100% Bebas API Key)</span>
+              </div>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
               Dasbor Keuangan &amp; Pembayaran SPP
@@ -190,6 +199,15 @@ export const AdminDashboard: React.FC<Props> = ({
             >
               <Download className="w-4 h-4 text-emerald-300" />
               <span>Unduh Template</span>
+            </button>
+
+            <button
+              onClick={exportDatabaseBackup}
+              className="px-3.5 py-2.5 bg-emerald-800/80 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl backdrop-blur-md transition-all flex items-center gap-1.5 border border-emerald-500/40 shadow-xs"
+              title="Unduh Cadangan Basis Data JSON Mandiri Tanpa API Key"
+            >
+              <Database className="w-4 h-4 text-emerald-300" />
+              <span>Cadangkan Data (.JSON)</span>
             </button>
 
             <button
