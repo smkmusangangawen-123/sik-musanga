@@ -1,0 +1,6 @@
+{
+  "name": "EduPay SMK - Sistem Pembayaran SPP & Uang Pengembangan",
+  "description": "Sistem informasi keuangan sekolah untuk SPP & Uang Pengembangan dengan payment gateway multi-channel, notifikasi tagihan WhatsApp, laporan filter kelas/siswa, dan portal siswa/wali murid.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
